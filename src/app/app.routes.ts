@@ -10,11 +10,13 @@ import { Subjects } from './pages/dashboard/subjects/subjects';
 
 import { NotAuthenticatedGuard } from './auth/guards/not-authenticated.guard';
 import { IsAuthenticatedGuard } from './auth/guards/is-authenticated.guard';
+import { DashBoardGeneral } from './pages/dash-board-general/dash-board-general';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
   { path: 'home', component: Home },
+  { path: 'dash-board', component: DashBoardGeneral },
   { path: 'login', component: Login, canMatch: [NotAuthenticatedGuard] },
   { path: 'register', component: Register, canMatch: [NotAuthenticatedGuard] },
 

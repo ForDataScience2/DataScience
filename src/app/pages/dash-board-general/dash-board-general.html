@@ -1,0 +1,145 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div>
+      <p class="dashboard-label">Dashboard Académico</p>
+      <h1>Panel General de Riesgo Académico</h1>
+      <p class="dashboard-subtitle">
+        Monitorea estudiantes, actividad, dificultad, alertas y recomendaciones en tiempo real.
+      </p>
+    </div>
+
+    <div class="header-badge">
+      <span class="pulse-dot"></span>
+      Actualizado hace 5 min
+    </div>
+  </div>
+
+  <section class="kpi-grid">
+    <div class="kpi-card" *ngFor="let kpi of kpis">
+      <div class="kpi-top">
+        <span class="kpi-icon">{{ kpi.icon }}</span>
+        <span class="kpi-change" [class.positive]="kpi.positive" [class.negative]="!kpi.positive">
+          {{ kpi.change }}
+        </span>
+      </div>
+      <h3>{{ kpi.value }}</h3>
+      <p>{{ kpi.title }}</p>
+    </div>
+  </section>
+
+  <section class="chart-grid chart-grid-main">
+    <div class="chart-card large">
+      <div class="card-header">
+        <h2>Estudiantes en riesgo por carrera</h2>
+        <span>Vista comparativa</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="riskByCareerChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <h2>Dificultad de exámenes</h2>
+        <span>Distribución</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="difficultyChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="chart-grid">
+    <div class="chart-card wide">
+      <div class="card-header">
+        <h2>Actividad académica semanal</h2>
+        <span>Tendencia</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="weeklyActivityChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <h2>Radar de desempeño</h2>
+        <span>Indicadores clave</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="performanceRadarChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="chart-grid">
+    <div class="chart-card">
+      <div class="card-header">
+        <h2>Actividad vs Riesgo</h2>
+        <span>Correlación</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="activityVsRiskChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <h2>Riesgo por módulo</h2>
+        <span>Segmentación</span>
+      </div>
+      <div class="chart-box">
+        <canvas id="riskByModuleChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="bottom-grid">
+    <div class="table-card">
+      <div class="card-header">
+        <h2>Alertas tempranas</h2>
+        <span>Seguimiento</span>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Estudiante</th>
+              <th>Carrera</th>
+              <th>Materia</th>
+              <th>Riesgo</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let alert of alerts">
+              <td>{{ alert.student }}</td>
+              <td>{{ alert.career }}</td>
+              <td>{{ alert.subject }}</td>
+              <td>
+                <span class="risk-badge" [ngClass]="getRiskClass(alert.risk)">
+                  {{ alert.risk }}
+                </span>
+              </td>
+              <td>{{ alert.score }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="insights-card">
+      <div class="card-header">
+        <h2>Insights y recomendaciones</h2>
+        <span>Motor inteligente</span>
+      </div>
+
+      <div class="insights-list">
+        <div class="insight-item" *ngFor="let insight of recommendations; let i = index">
+          <div class="insight-number">{{ i + 1 }}</div>
+          <p>{{ insight }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
