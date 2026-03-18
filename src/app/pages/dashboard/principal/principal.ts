@@ -13,7 +13,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { NavigationEnd, Router } from '@angular/router';
-import { Chart, registerables } from 'chart.js';
+import { Chart, ChartTypeRegistry, registerables } from 'chart.js';
 import { filter } from 'rxjs/operators';
 
 import { SubjectsService } from '../../../services/subjects.service';
@@ -30,6 +30,9 @@ type CalendarDay = {
   studied: boolean;
   isToday: boolean;
 };
+
+// Tipo helper para evitar conflictos de genéricos en Chart.js
+type AnyChart = Chart<keyof ChartTypeRegistry, unknown[], unknown>;
 
 @Component({
   selector: 'app-principal',
@@ -55,11 +58,12 @@ export class Principal implements AfterViewInit, OnDestroy {
   zeroCompletedSubjects: string[] = [];
 
   private isBrowser = false;
-  private materiasChart?: Chart;
-  private tiempoChart?: Chart;
-  private guiasChart?: Chart;
-  private examenesCreadosChart?: Chart;
-  private pendientesChart?: Chart;
+  // ✅ Fix: usar AnyChart en lugar de Chart sin genéricos
+  private materiasChart?: AnyChart;
+  private tiempoChart?: AnyChart;
+  private guiasChart?: AnyChart;
+  private examenesCreadosChart?: AnyChart;
+  private pendientesChart?: AnyChart;
   private static pendingLabelPluginRegistered = false;
   private static barLabelPluginRegistered = false;
   private authUnsubscribe?: () => void;
@@ -148,7 +152,6 @@ export class Principal implements AfterViewInit, OnDestroy {
     const mergedWeeklyMinutes = metricsWeeklyMinutes.map(
       (minutes, idx) => minutes + (examDriven.weeklyMinutes[idx] ?? 0),
     );
-    const mergedWeeklyHours = mergedWeeklyMinutes.map((minutes) => Math.round((minutes / 60) * 10) / 10);
     const mergedWeeklyHoursChart = mergedWeeklyMinutes.map((minutes) => {
       if (!minutes) return 0;
       const hours = minutes / 60;
@@ -513,6 +516,7 @@ export class Principal implements AfterViewInit, OnDestroy {
     this.registerPendingLabelPlugin();
     this.registerBarLabelPlugin();
 
+    // ✅ Se usa 'as AnyChart' para resolver incompatibilidad de genéricos de Chart.js
     this.materiasChart = new Chart(this.materiasCanvas.nativeElement, {
       type: 'bar',
       data: {
@@ -528,32 +532,14 @@ export class Principal implements AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-          padding: { top: 18 },
-        },
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-        },
+        layout: { padding: { top: 18 } },
+        plugins: { legend: { position: 'bottom' } },
         scales: {
-          x: {
-            grid: {
-              display: false,
-            },
-          },
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-            },
-            grid: {
-              display: false,
-            },
-          },
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { display: false } },
         },
       },
-    });
+    }) as AnyChart;
 
     this.guiasChart = new Chart(this.guiasCanvas.nativeElement, {
       type: 'bar',
@@ -570,32 +556,14 @@ export class Principal implements AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-          padding: { top: 18 },
-        },
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-        },
+        layout: { padding: { top: 18 } },
+        plugins: { legend: { position: 'bottom' } },
         scales: {
-          x: {
-            grid: {
-              display: false,
-            },
-          },
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-            },
-            grid: {
-              display: false,
-            },
-          },
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { display: false } },
         },
       },
-    });
+    }) as AnyChart;
 
     this.examenesCreadosChart = new Chart(this.examenesCreadosCanvas.nativeElement, {
       type: 'bar',
@@ -612,37 +580,15 @@ export class Principal implements AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-          padding: { top: 18 },
-        },
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-        },
+        layout: { padding: { top: 18 } },
+        plugins: { legend: { position: 'bottom' } },
         indexAxis: 'y',
         scales: {
-          x: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-            },
-            grid: {
-              display: false,
-            },
-          },
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-            },
-            grid: {
-              display: false,
-            },
-          },
+          x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { display: false } },
         },
       },
-    });
+    }) as AnyChart;
 
     this.pendientesChart = new Chart(this.pendientesCanvas.nativeElement, {
       type: 'doughnut',
@@ -659,13 +605,9 @@ export class Principal implements AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-        },
+        plugins: { legend: { position: 'bottom' } },
       },
-    });
+    }) as AnyChart;
 
     this.tiempoChart = new Chart(this.tiempoCanvas.nativeElement, {
       type: 'line',
@@ -686,9 +628,7 @@ export class Principal implements AfterViewInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: 'bottom',
-          },
+          legend: { position: 'bottom' },
           tooltip: {
             callbacks: {
               label: (ctx) => {
@@ -710,18 +650,12 @@ export class Principal implements AfterViewInit, OnDestroy {
               stepSize: 0.5,
               callback: (value) => `${Number(value).toFixed(1)} h`,
             },
-            grid: {
-              display: false,
-            },
+            grid: { display: false },
           },
-          x: {
-            grid: {
-              display: false,
-            },
-          },
+          x: { grid: { display: false } },
         },
       },
-    });
+    }) as AnyChart;
   }
 
   ngOnDestroy(): void {
@@ -735,7 +669,7 @@ export class Principal implements AfterViewInit, OnDestroy {
   }
 
   private buildColorScale(count: number): string[] {
-    const palette = ['#6bb6e5', '#f28db5', '#4ecfb4']; // cielo, rosa, aqua más vivos
+    const palette = ['#6bb6e5', '#f28db5', '#4ecfb4'];
     if (count <= 1) return [palette[0]];
     const colors: string[] = [];
     for (let i = 0; i < count; i++) {
@@ -749,7 +683,7 @@ export class Principal implements AfterViewInit, OnDestroy {
 
     const plugin = {
       id: 'pendingValueLabels',
-      afterDatasetDraw: (chart: Chart, args: any, pluginOptions: any) => {
+      afterDatasetDraw: (chart: AnyChart, args: any, pluginOptions: any) => {
         const chartType = (chart.config as { type?: string }).type;
         if (chartType !== 'doughnut') return;
         const { ctx } = chart;
@@ -783,7 +717,7 @@ export class Principal implements AfterViewInit, OnDestroy {
 
     const plugin = {
       id: 'barValueLabels',
-      afterDatasetDraw: (chart: Chart, args: any, pluginOptions: any) => {
+      afterDatasetDraw: (chart: AnyChart, args: any, pluginOptions: any) => {
         const chartType = (chart.config as { type?: string }).type;
         if (chartType !== 'bar') return;
         const { ctx } = chart;

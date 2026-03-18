@@ -7,139 +7,213 @@
         Monitorea estudiantes, actividad, dificultad, alertas y recomendaciones en tiempo real.
       </p>
     </div>
-
-    <div class="header-badge">
-      <span class="pulse-dot"></span>
-      Actualizado hace 5 min
+    <div class="header-actions">
+      <button type="button" class="refresh-btn" (click)="loadStats(true)" [disabled]="loading">
+        <span class="refresh-icon" [class.spinning]="loading">↻</span>
+        <span class="refresh-text">Actualizar</span>
+      </button>
+      <div class="header-badge">
+        <span class="pulse-dot" [class.error-dot]="!!error"></span>
+        <span *ngIf="!loading && !error && lastUpdated">Actualizado {{ lastUpdated }}</span>
+        <span *ngIf="loading">Actualizando...</span>
+        <span *ngIf="error && !loading">Error al cargar</span>
+      </div>
     </div>
   </div>
 
+  <div class="error-banner" *ngIf="error && !loading">
+    <span>⚠️ {{ error }}</span>
+    <button type="button" (click)="loadStats(true)">Reintentar</button>
+  </div>
+
+  <!-- KPI Grid -->
   <section class="kpi-grid">
-    <div class="kpi-card" *ngFor="let kpi of kpis">
-      <div class="kpi-top">
-        <span class="kpi-icon">{{ kpi.icon }}</span>
-        <span class="kpi-change" [class.positive]="kpi.positive" [class.negative]="!kpi.positive">
-          {{ kpi.change }}
-        </span>
+    <ng-container *ngIf="loading">
+      <div class="kpi-card skeleton" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line tall"></div>
+        <div class="skeleton-line medium"></div>
       </div>
-      <h3>{{ kpi.value }}</h3>
-      <p>{{ kpi.title }}</p>
-    </div>
+    </ng-container>
+    <ng-container *ngIf="!loading">
+      <div class="kpi-card" *ngFor="let kpi of kpis">
+        <div class="kpi-meta-badge">{{ kpi.miniLabel }}</div>
+        <div class="kpi-top">
+          <span class="kpi-icon">{{ kpi.icon }}</span>
+          <span class="kpi-change"
+            [class.positive]="kpi.positive && !isStaticChange(kpi.change)"
+            [class.negative]="!kpi.positive && !isStaticChange(kpi.change)"
+            [class.neutral]="isStaticChange(kpi.change)">
+            {{ kpi.change }}
+          </span>
+        </div>
+        <h3>{{ kpi.value }}</h3>
+        <p>{{ kpi.title }}</p>
+      </div>
+    </ng-container>
   </section>
 
+  <!-- Charts row 1 -->
   <section class="chart-grid chart-grid-main">
     <div class="chart-card large">
       <div class="card-header">
         <h2>Estudiantes en riesgo por carrera</h2>
-        <span>Vista comparativa</span>
+        <span>Click para filtrar tabla</span>
       </div>
-      <div class="chart-box">
-        <canvas id="riskByCareerChart"></canvas>
-      </div>
+      <div class="chart-box"><canvas id="riskByCareerChart"></canvas></div>
     </div>
-
     <div class="chart-card">
       <div class="card-header">
         <h2>Dificultad de exámenes</h2>
-        <span>Distribución</span>
+        <span>Click para filtrar tabla</span>
       </div>
-      <div class="chart-box">
-        <canvas id="difficultyChart"></canvas>
-      </div>
+      <div class="chart-box"><canvas id="difficultyChart"></canvas></div>
     </div>
   </section>
 
+  <!-- Charts row 2 -->
   <section class="chart-grid">
     <div class="chart-card wide">
       <div class="card-header">
         <h2>Actividad académica semanal</h2>
         <span>Tendencia</span>
       </div>
-      <div class="chart-box">
-        <canvas id="weeklyActivityChart"></canvas>
-      </div>
+      <div class="chart-box"><canvas id="weeklyActivityChart"></canvas></div>
     </div>
-
     <div class="chart-card">
       <div class="card-header">
         <h2>Radar de desempeño</h2>
         <span>Indicadores clave</span>
       </div>
-      <div class="chart-box">
-        <canvas id="performanceRadarChart"></canvas>
-      </div>
+      <div class="chart-box"><canvas id="performanceRadarChart"></canvas></div>
     </div>
   </section>
 
+  <!-- Charts row 3 -->
   <section class="chart-grid">
     <div class="chart-card">
       <div class="card-header">
         <h2>Actividad vs Riesgo</h2>
         <span>Correlación</span>
       </div>
-      <div class="chart-box">
-        <canvas id="activityVsRiskChart"></canvas>
-      </div>
+      <div class="chart-box"><canvas id="activityVsRiskChart"></canvas></div>
     </div>
-
     <div class="chart-card">
       <div class="card-header">
         <h2>Riesgo por módulo</h2>
-        <span>Segmentación</span>
+        <span>Click para filtrar tabla</span>
       </div>
-      <div class="chart-box">
-        <canvas id="riskByModuleChart"></canvas>
-      </div>
+      <div class="chart-box"><canvas id="riskByModuleChart"></canvas></div>
     </div>
   </section>
 
+  <!-- Bottom: Alertas + Insights -->
   <section class="bottom-grid">
+
+    <!-- Tabla de alertas -->
     <div class="table-card">
       <div class="card-header">
-        <h2>Alertas tempranas</h2>
-        <span>Seguimiento</span>
+        <div class="table-header-left">
+          <h2>Alertas tempranas</h2>
+          <div class="table-badges">
+            <span class="badge-alto">5 riesgo alto</span>
+            <span class="badge-bajo">5 mejor score</span>
+          </div>
+        </div>
+        <div class="table-header-right">
+          <div class="active-filter-badge" *ngIf="activeFilter">
+            <span>🔍 {{ activeFilter.label }}</span>
+            <button type="button" class="clear-filter-btn" (click)="clearFilter()" title="Quitar filtro">✕</button>
+          </div>
+          <span *ngIf="!activeFilter">Seguimiento</span>
+        </div>
       </div>
 
-      <div class="table-wrapper">
+      <div class="no-data-row" *ngIf="!loading && filteredAlerts.length === 0">
+        <span>{{ activeFilter ? 'No hay resultados para este filtro.' : 'No hay datos de exámenes completados.' }}</span>
+      </div>
+
+      <div class="table-wrapper" *ngIf="filteredAlerts.length > 0">
         <table>
           <thead>
             <tr>
               <th>Estudiante</th>
               <th>Carrera</th>
               <th>Materia</th>
+              <th>Dificultad</th>
+              <th>Intentos</th>
               <th>Riesgo</th>
               <th>Score</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let alert of alerts">
-              <td>{{ alert.student }}</td>
+            <tr *ngFor="let alert of filteredAlerts; let i = index"
+                [class.row-separator]="i === 5">
+              <td class="td-student">
+                <span class="student-avatar">{{ alert.displayName.charAt(0).toUpperCase() }}</span>
+                <span>{{ alert.displayName }}</span>
+              </td>
               <td>{{ alert.career }}</td>
               <td>{{ alert.subject }}</td>
               <td>
-                <span class="risk-badge" [ngClass]="getRiskClass(alert.risk)">
-                  {{ alert.risk }}
+                <span class="diff-badge diff-{{ alert.difficulty }}">
+                  {{ getDiffLabel(alert.difficulty) }}
                 </span>
               </td>
-              <td>{{ alert.score }}</td>
+              <td class="td-center">{{ alert.attempts }}</td>
+              <td>
+                <span class="risk-badge" [ngClass]="getRiskClass(alert.riskLevel)">
+                  {{ alert.riskLevel }}
+                </span>
+              </td>
+              <td>
+                <div class="score-cell">
+                  <span class="score-value">{{ alert.scoreLabel }}</span>
+                  <div class="score-bar-bg">
+                    <div class="score-bar-fill"
+                      [style.width.%]="alert.scorePct"
+                      [class.fill-alto]="alert.riskLevel === 'Alto'"
+                      [class.fill-medio]="alert.riskLevel === 'Medio'"
+                      [class.fill-bajo]="alert.riskLevel === 'Bajo'">
+                    </div>
+                  </div>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
+    <!-- Insights dinámicos -->
     <div class="insights-card">
       <div class="card-header">
         <h2>Insights y recomendaciones</h2>
         <span>Motor inteligente</span>
       </div>
 
-      <div class="insights-list">
-        <div class="insight-item" *ngFor="let insight of recommendations; let i = index">
-          <div class="insight-number">{{ i + 1 }}</div>
-          <p>{{ insight }}</p>
+      <div class="insights-list" *ngIf="loading">
+        <div class="insight-item skeleton" *ngFor="let i of [1,2,3,4]">
+          <div class="skeleton-circle"></div>
+          <div class="insight-body">
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short" style="margin-top:6px"></div>
+          </div>
         </div>
       </div>
+
+      <div class="insights-list" *ngIf="!loading && insights.length > 0">
+        <div class="insight-item" [ngClass]="getInsightClass(insight.type)"
+             *ngFor="let insight of insights; let i = index">
+          <div class="insight-number">{{ getInsightIcon(insight.type) }}</div>
+          <p>{{ insight.text }}</p>
+        </div>
+      </div>
+
+      <div class="no-data-row" *ngIf="!loading && insights.length === 0">
+        <span>No hay suficientes datos para generar insights.</span>
+      </div>
     </div>
+
   </section>
 </div>

@@ -16,7 +16,7 @@ export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
 
   { path: 'home', component: Home },
-  { path: 'dash-board', component: DashBoardGeneral },
+  { path: 'dashboard-general', component: DashBoardGeneral },
   { path: 'login', component: Login, canMatch: [NotAuthenticatedGuard] },
   { path: 'register', component: Register, canMatch: [NotAuthenticatedGuard] },
 
